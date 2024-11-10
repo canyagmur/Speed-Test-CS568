@@ -128,7 +128,7 @@ socket.on("upload", function () {
     let max = Math.max.apply(null, results);
     uploadElem.innerHTML = rounded(max) + " Mbps";
 
-    startBtn.style.display = "block";
+    //startBtn.style.display = "block";
     startBtn.innerText = "RUN AGAIN";
 
     var today = new Date();
