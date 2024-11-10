@@ -14,7 +14,7 @@ app.use(express.static("public"));
 
 // Render the main page
 app.get("/", function (req, res) {
-  res.render("view"); // Renders views/hello.ejs
+  res.render("view"); // Renders the view/view.ejs file
 });
 
 // Create HTTP server and Socket.io instance
@@ -23,7 +23,7 @@ var io = socketIo(server);
 
 // Listen on the specified port (default to 3000 if not set in .env)
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("listening on port " + PORT));
+server.listen(PORT, () => console.log("listening on port " + PORT + "go to http://localhost:"+ PORT + " to view the app"));
 
 // Handle socket connections and events
 io.on("connection", function (socket) {
