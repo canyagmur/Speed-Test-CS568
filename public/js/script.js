@@ -1,6 +1,5 @@
 // Initialize socket and other variables
 const socket = io();
-let results = [];
 let requestStart;
 let downloadStart;
 let uploadStart;
@@ -20,15 +19,22 @@ const testResults = {
   dates: [],
 };
 
+// Separate arrays for storing download and upload results
+let downloadResults = [];
+let uploadResults = [];
+let pingResults = [];
+
+
 // Function to start the test
 function startTest() {
   const startBtn = document.getElementById("start-button");
   startBtn.innerText = "Stop Test!";
-  startBtn.onclick = () => location.reload();
+  startBtn.onclick = () => location.reload(); // Stop the test if "Stop Test!" is clicked
 
   // Reset all variables
   dataDownloaded = 0;
   dataUploaded = 0;
+
   // Reset displayed values in the bubbles
   document.getElementById("ping").textContent = "0 ms";
   document.getElementById("download").textContent = "0 Mbps";
@@ -36,14 +42,12 @@ function startTest() {
   document.getElementById("upload").textContent = "0 Mbps";
   document.getElementById("datauploaded").textContent = "0 MB";
 
-
   startPing();
 }
 
 // Initialize ping test
 function startPing() {
   document.getElementById("ping").textContent = "";
-  results = [];
   ping();
 }
 
@@ -72,10 +76,10 @@ function upload() {
 socket.on("serverPong", function (data) {
   let latency = Date.now() - data;
   document.getElementById("ping").innerHTML = latency + " ms";
-  results.push(latency);
+  pingResults.push(latency);
 
-  if (results.length === 15) {
-    let result = Math.min.apply(null, results);
+  if (pingResults.length === 15) {
+    let result = Math.min.apply(null, pingResults);
     document.getElementById("ping").innerHTML = result + " ms";
     startDownload();
   } else {
@@ -90,22 +94,22 @@ socket.on("download", function (data) {
   let received = (data.byteLength * 8) / 1024 / 1024;
   let result = received / elapsed;
   junkData = data;
-  results.push(result);
+  downloadResults.push(result);
 
   let downloadElem = document.getElementById("download");
   let downloadedData = document.getElementById("datadown");
 
-  downloadElem.innerHTML = rounded(result) + " Mbps";
+  let maxDownload = Math.max(...downloadResults);
+  let avgDownload = downloadResults.reduce((a, b) => a + b, 0) / downloadResults.length;
+  
+  downloadElem.innerHTML = `Max: ${rounded(maxDownload)} Mbps<br>Avg: ${rounded(avgDownload)} Mbps`;
 
   if (Date.now() - downloadStart > 1000 * DOWNLOAD_TIME_SEC) {
-    let max = Math.max.apply(null, results);
-    downloadElem.innerHTML = rounded(max) + " Mbps";
     startUpload();
   } else {
     chunkSize = calcChunk(result);
     dataDownloaded += chunkSize;
-    downloadedData.innerHTML =
-      rounded(rounded(dataDownloaded) * 0.000000125).toFixed(2) + " MB";
+    downloadedData.innerHTML = `${rounded(dataDownloaded * 0.000000125).toFixed(2)} MB`;
     download();
   }
 });
@@ -116,23 +120,23 @@ socket.on("upload", function () {
   let elapsed = (Date.now() - requestStart) / 1000;
   let sent = (chunkSize * 8) / 1024 / 1024;
   let result = sent / elapsed;
-  results.push(result);
+  uploadResults.push(result);
 
   let uploadElem = document.getElementById("upload");
   let uploadedData = document.getElementById("datauploaded");
-  let startBtn = document.getElementById("start-button");
 
-  uploadElem.innerHTML = rounded(result) + " Mbps";
+  let maxUpload = Math.max(...uploadResults);
+  let avgUpload = uploadResults.reduce((a, b) => a + b, 0) / uploadResults.length;
+
+  uploadElem.innerHTML = `Max: ${rounded(maxUpload)} Mbps<br>Avg: ${rounded(avgUpload)} Mbps`;
 
   if (Date.now() - uploadStart > UPLOAD_TIME_SEC * 1000) {
-    let max = Math.max.apply(null, results);
-    uploadElem.innerHTML = rounded(max) + " Mbps";
-
-    //startBtn.style.display = "block";
+    // Update button to "RUN AGAIN"
+    const startBtn = document.getElementById("start-button");
     startBtn.innerText = "RUN AGAIN";
 
-    var today = new Date();
-    var date =
+    let today = new Date();
+    let date =
       today.getFullYear() +
       "-" +
       (today.getMonth() + 1) +
@@ -143,12 +147,11 @@ socket.on("upload", function () {
       ":" +
       today.getMinutes();
 
-    testResults.downloads.push(uploadElem.innerText);
-    testResults.uploads.push(uploadElem.innerText);
+    // Save results to testResults
+    testResults.downloads.push(`Max: ${rounded(maxDownload)} Mbps / Avg: ${rounded(avgDownload)} Mbps`);
+    testResults.uploads.push(`Max: ${rounded(maxUpload)} Mbps / Avg: ${rounded(avgUpload)} Mbps`);
     testResults.pings.push(document.getElementById("ping").innerText);
-    testResults.downloadSizes.push(
-      document.getElementById("datadown").innerText
-    );
+    testResults.downloadSizes.push(document.getElementById("datadown").innerText);
     testResults.uploadSizes.push(uploadedData.innerText);
     testResults.dates.push(date);
 
@@ -158,12 +161,12 @@ socket.on("upload", function () {
   } else {
     chunkSize = calcChunk(result);
     dataUploaded += chunkSize;
-    uploadedData.innerHTML =
-    rounded(rounded(dataUploaded) * 0.000000125).toFixed(2) + " MB";
+    uploadedData.innerHTML = `${rounded(dataUploaded * 0.000000125).toFixed(2)} MB`;
     upload();
   }
 });
 
+// Render the results table
 function renderTable() {
   let str = "";
   for (let i = 0; i < testResults.downloads.length; i++) {
@@ -179,6 +182,7 @@ function renderTable() {
   return str;
 }
 
+// Utility functions
 function rounded(num) {
   return Math.round((num + Number.EPSILON) * 100) / 100;
 }
@@ -188,13 +192,10 @@ function calcChunk(data) {
 }
 
 function randomBytes(size) {
-  var str = "";
-  for (var i = 0; i < size; i++) {
-    var randByte = parseInt(Math.random() * 256, 10);
-    randByte = randByte.toString(16);
-    if (randByte.length == 1) {
-      randByte = "0" + randByte;
-    }
+  let str = "";
+  for (let i = 0; i < size; i++) {
+    let randByte = parseInt(Math.random() * 256, 10).toString(16);
+    if (randByte.length == 1) randByte = "0" + randByte;
     str += randByte;
   }
   return str;
@@ -202,7 +203,7 @@ function randomBytes(size) {
 
 function startDownload() {
   document.getElementById("download").innerHTML = "";
-  results = [];
+  downloadResults = []; // Clear download results before starting
   chunkSize = startChunkSize;
   downloadStart = Date.now();
   download();
@@ -210,7 +211,7 @@ function startDownload() {
 
 function startUpload() {
   document.getElementById("upload").innerHTML = "";
-  results = [];
+  uploadResults = []; // Clear upload results before starting
   chunkSize = startChunkSize;
   uploadStart = Date.now();
   upload();
