@@ -4,7 +4,7 @@ let results = [];
 let requestStart;
 let downloadStart;
 let uploadStart;
-let startChunkSize = 100000;
+let startChunkSize = 1000000;
 let chunkSize;
 let junkData;
 
