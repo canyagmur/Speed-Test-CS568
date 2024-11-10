@@ -24,6 +24,12 @@ let downloadResults = [];
 let uploadResults = [];
 let pingResults = [];
 
+let maxDownload;
+let avgDownload;
+let maxUpload;
+let avgUpload;
+
+
 
 // Function to start the test
 function startTest() {
@@ -99,8 +105,8 @@ socket.on("download", function (data) {
   let downloadElem = document.getElementById("download");
   let downloadedData = document.getElementById("datadown");
 
-  let maxDownload = Math.max(...downloadResults);
-  let avgDownload = downloadResults.reduce((a, b) => a + b, 0) / downloadResults.length;
+  maxDownload = Math.max(...downloadResults);
+  avgDownload = downloadResults.reduce((a, b) => a + b, 0) / downloadResults.length;
   
   downloadElem.innerHTML = `Max: ${rounded(maxDownload)} Mbps<br>Avg: ${rounded(avgDownload)} Mbps`;
 
@@ -125,8 +131,8 @@ socket.on("upload", function () {
   let uploadElem = document.getElementById("upload");
   let uploadedData = document.getElementById("datauploaded");
 
-  let maxUpload = Math.max(...uploadResults);
-  let avgUpload = uploadResults.reduce((a, b) => a + b, 0) / uploadResults.length;
+  maxUpload = Math.max(...uploadResults);
+  avgUpload = uploadResults.reduce((a, b) => a + b, 0) / uploadResults.length;
 
   uploadElem.innerHTML = `Max: ${rounded(maxUpload)} Mbps<br>Avg: ${rounded(avgUpload)} Mbps`;
 
