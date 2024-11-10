@@ -53,6 +53,7 @@ function startTest() {
 
 // Initialize ping test
 function startPing() {
+  pingResults = []; // Clear ping results before starting
   document.getElementById("ping").textContent = "";
   ping();
 }
