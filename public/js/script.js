@@ -26,8 +26,19 @@ function startTest() {
   startBtn.innerText = "Stop Test!";
   startBtn.onclick = () => location.reload();
 
+  // Reset all variables
   dataDownloaded = 0;
   dataUploaded = 0;
+  results = [];
+
+  // Reset displayed values in the bubbles
+  document.getElementById("ping").textContent = "0 ms";
+  document.getElementById("download").textContent = "0 Mbps";
+  document.getElementById("datadown").textContent = "0 MB";
+  document.getElementById("upload").textContent = "0 Mbps";
+  document.getElementById("datauploaded").textContent = "0 MB";
+
+
   startPing();
 }
 
