@@ -112,6 +112,8 @@ body {
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
+  width: 200px; 
+  text-align: center;
 }
 
 .start-button:hover {

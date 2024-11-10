@@ -29,8 +29,6 @@ function startTest() {
   // Reset all variables
   dataDownloaded = 0;
   dataUploaded = 0;
-  results = [];
-
   // Reset displayed values in the bubbles
   document.getElementById("ping").textContent = "0 ms";
   document.getElementById("download").textContent = "0 Mbps";
